@@ -6,7 +6,7 @@ import (
 	j "github.com/dave/jennifer/jen"
 )
 
-const jsonRuntimePkg = "github.com/akishichinibu/goadt/pkg/runtime"
+const runtimePkg = "github.com/akishichinibu/goadt/pkg/runtime"
 
 type UnionGenerator struct {
 	order  int
@@ -44,6 +44,7 @@ func (g *UnionGenerator) paramsWithSingleParamFunc() (cs []j.Code) {
 }
 
 func (g *UnionGenerator) genStruct(f *j.File) {
+	f.Commentf("Union%d is a generic tagged union type that holds a value of the type Tn.", g.order)
 	f.Type().Id(g.naming.structName).Types(g.typeNamesWithAny()...).StructFunc(func(s *j.Group) {
 		s.Id(g.naming.kindMember).Uint8()
 		for i := 1; i <= g.order; i++ {
@@ -52,7 +53,10 @@ func (g *UnionGenerator) genStruct(f *j.File) {
 	})
 }
 
-func (g *UnionGenerator) GenWhenMethod(f *j.File) {
+func (g *UnionGenerator) genWhenMethod(f *j.File) {
+	f.Commentf("When invokes one of the provided functions depending on the stored variant.")
+	f.Commentf("If the value is of type Tn, calls tn.")
+
 	f.Func().
 		Params(j.Id("u").Op("*").Id(g.naming.structName).Types(g.typeNameIds()...)).
 		Id("When").
@@ -69,8 +73,9 @@ func (g *UnionGenerator) GenWhenMethod(f *j.File) {
 }
 
 // Generate Get1 ~ GetN methods
-func (g *UnionGenerator) GenGetMethods(f *j.File) {
+func (g *UnionGenerator) genGetMethods(f *j.File) {
 	for i := 1; i <= g.order; i++ {
+		f.Commentf("As%d returns the value as T%d and a boolean indicating whether the value is indeed T%d.", i, i, i)
 		f.Func().Params(j.Id("u").Op("*").Id(g.naming.structName).Types(g.typeNameIds()...)).
 			Id(g.naming.getter(i)).Params().
 			Params(j.Id(g.naming.typeName(i)), j.Bool()).
@@ -83,8 +88,8 @@ func (g *UnionGenerator) GenGetMethods(f *j.File) {
 	}
 }
 
-func (g *UnionGenerator) GenJSONMethods(f *j.File) {
-	// MarshalJSON
+func (g *UnionGenerator) genJSONMethods(f *j.File) {
+	f.Commentf("MarshalJSON implements the `json.Marshaler` interface for %s.", g.naming.structName)
 	f.Func().Params(j.Id("u").Op("*").Id(g.naming.structName).Types(g.typeNameIds()...)).
 		Id("MarshalJSON").
 		Params().Params(j.Index().Byte(), j.Error()).
@@ -92,7 +97,7 @@ func (g *UnionGenerator) GenJSONMethods(f *j.File) {
 			b.Switch(j.Id("u").Dot(g.naming.kindMember)).BlockFunc(func(s *j.Group) {
 				for i := 1; i <= g.order; i++ {
 					s.Case(j.Lit(i)).Block(
-						j.Return(j.Qual(jsonRuntimePkg, "MarshalJSON").Call(j.Id("u").Dot(fmt.Sprintf("t%d", i)))),
+						j.Return(j.Qual(runtimePkg, "MarshalJSON").Call(j.Id("u").Dot(g.naming.value(i)))),
 					)
 				}
 				s.Default().Block(
@@ -104,15 +109,17 @@ func (g *UnionGenerator) GenJSONMethods(f *j.File) {
 	f.Line()
 
 	// UnmarshalJSON
+	f.Commentf("UnmarshalJSON implements the `json.Unmarshaler` interface for %s.", g.naming.structName)
+	f.Commentf("It attempts to decode the JSON data into T1 or Tn.")
 	f.Func().Params(j.Id("u").Op("*").Id(g.naming.structName).Types(g.typeNameIds()...)).
 		Id("UnmarshalJSON").
 		Params(j.Id("data").Index().Byte()).Error().
 		BlockFunc(func(b *j.Group) {
 			for i := 1; i <= g.order; i++ {
-				b.List(j.Id(fmt.Sprintf("err%d", i))).Op(":=").Qual(jsonRuntimePkg, "UnmarshalJSON").Call(
-					j.Id("data"), j.Op("&").Id("u").Dot(fmt.Sprintf("t%d", i)),
+				b.List(j.Id(g.naming.errName(i))).Op(":=").Qual(runtimePkg, "UnmarshalJSON").Call(
+					j.Id("data"), j.Op("&").Id("u").Dot(g.naming.value(i)),
 				)
-				b.If(j.Id(fmt.Sprintf("err%d", i)).Op("==").Nil()).Block(
+				b.If(j.Id(g.naming.errName(i)).Op("==").Nil()).Block(
 					j.Id("u").Dot(g.naming.kindMember).Op("=").Lit(i),
 					j.Return(j.Nil()),
 				)
@@ -123,20 +130,7 @@ func (g *UnionGenerator) GenJSONMethods(f *j.File) {
 		})
 }
 
-func (g *UnionGenerator) fromMethodName(i int) string {
-	return fmt.Sprintf("From%d", i)
-}
-
-func (g *UnionGenerator) GenBuilder(f *j.File) {
-	// Builder interface
-	f.Type().Id(g.naming.builderInterface).Types(g.typeNamesWithAny()...).InterfaceFunc(func(iface *j.Group) {
-		for i := 1; i <= g.order; i++ {
-			iface.Id(g.fromMethodName(i)).Params(
-				j.Id(fmt.Sprintf("t%d", i)).Id(fmt.Sprintf("T%d", i)),
-			).Op("*").Id(g.naming.structName).Types(g.typeNameIds()...)
-		}
-	})
-
+func (g *UnionGenerator) genBuilder(f *j.File) {
 	// Builder struct
 	f.Type().Id(g.naming.builderImpl).Types(g.typeNamesWithAny()...).Struct()
 
@@ -157,7 +151,8 @@ func (g *UnionGenerator) GenBuilder(f *j.File) {
 	}
 }
 
-func (g *UnionGenerator) GenFactory(f *j.File) {
+func (g *UnionGenerator) genFactory(f *j.File) {
+	f.Commentf("NewUnion%d returns a builder to construct %s values using From1 or From%d.", g.order, g.naming.structName, g.order)
 	f.Func().Id(g.naming.factoryMethod).
 		Types(g.typeNamesWithAny()...).Params().
 		Params(j.Op("*").Id(g.naming.builderImpl).Types(g.typeNameIds()...)).
@@ -170,11 +165,12 @@ func (g *UnionGenerator) Gen(f *j.File) error {
 	if g.order < 2 {
 		return fmt.Errorf("UnionN must have at least 2 types")
 	}
+
 	g.genStruct(f)
-	g.GenWhenMethod(f)
-	g.GenGetMethods(f)
-	g.GenJSONMethods(f)
-	g.GenBuilder(f)
-	g.GenFactory(f)
+	g.genWhenMethod(f)
+	g.genGetMethods(f)
+	g.genJSONMethods(f)
+	g.genBuilder(f)
+	g.genFactory(f)
 	return nil
 }

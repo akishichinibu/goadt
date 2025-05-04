@@ -29,8 +29,8 @@ func (n *unionNaming) setter(i int) string {
 	return fmt.Sprintf("From%d", i)
 }
 
-func (n *unionNaming) tagExtractor(i int) string {
-	return fmt.Sprintf("tagExtractor%d", i)
+func (n *unionNaming) errName(i int) string {
+	return fmt.Sprintf("err%d", i)
 }
 
 func newUnionNaming(n int) unionNaming {
