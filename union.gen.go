@@ -1,0 +1,1523 @@
+package goadt
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type Union2[T1 any, T2 any] struct {
+	kind uint8
+	t1   T1
+	t2   T2
+}
+
+func (u *Union2[T1, T2]) When(t1 func(t1 T1), t2 func(t2 T2)) {
+	switch u.kind {
+	case 1:
+		t1(u.t1)
+	case 2:
+		t2(u.t2)
+	default:
+		panic("unreachable")
+	}
+}
+func (u *Union2[T1, T2]) As1() (T1, bool) {
+	if u.kind == 1 {
+		return u.t1, true
+	}
+	return u.t1, false
+}
+func (u *Union2[T1, T2]) As2() (T2, bool) {
+	if u.kind == 2 {
+		return u.t2, true
+	}
+	return u.t2, false
+}
+
+// MarshalJSON implements the json.Marshaler interface for the Union2 type.
+// It serializes the Union2 instance into JSON based on the active variant.
+// If the Union2 instance holds a value of type T1, it marshals that value.
+// If it holds a value of type T2, it marshals that value instead.
+// An unreachable panic is triggered if the kind field has an invalid value.
+func (u *Union2[T1, T2]) MarshalJSON() ([]byte, error) {
+	switch u.kind {
+	case 1:
+		return json.Marshal(u.t1)
+	case 2:
+		return json.Marshal(u.t2)
+	default:
+		panic("unreachable")
+	}
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface for the Union2 type.
+// It attempts to unmarshal the provided JSON data into one of the two possible
+// types (T1 or T2) that the union can hold. The method tries to unmarshal the
+// data into the first type (T1) and, if successful, sets the kind field to 1.
+// If unmarshaling into T1 fails, it then attempts to unmarshal into the second
+// type (T2) and sets the kind field to 2 if successful. If both attempts fail,
+// it returns an error indicating that unmarshaling the Union2 type was not
+// successful.
+func (u *Union2[T1, T2]) UnmarshalJSON(data []byte) error {
+	err1 := json.Unmarshal(data, &u.t1)
+	if err1 == nil {
+		u.kind = 1
+		return nil
+	}
+	err2 := json.Unmarshal(data, &u.t2)
+	if err2 == nil {
+		u.kind = 2
+		return nil
+	}
+	return fmt.Errorf("failed to unmarshal Union2")
+}
+
+type Union2Builder[T1 any, T2 any] interface {
+	From1(t1 T1) *Union2[T1, T2]
+	From2(t2 T2) *Union2[T1, T2]
+}
+type union2Builder[T1 any, T2 any] struct{}
+
+func (b *union2Builder[T1, T2]) From1(t1 T1) *Union2[T1, T2] {
+	return &Union2[T1, T2]{
+		kind: 1,
+		t1:   t1,
+	}
+}
+func (b *union2Builder[T1, T2]) From2(t2 T2) *Union2[T1, T2] {
+	return &Union2[T1, T2]{
+		kind: 2,
+		t2:   t2,
+	}
+}
+func NewUnion2[T1 any, T2 any]() *union2Builder[T1, T2] {
+	return &union2Builder[T1, T2]{}
+}
+
+type Union3[T1 any, T2 any, T3 any] struct {
+	kind uint8
+	t1   T1
+	t2   T2
+	t3   T3
+}
+
+func (u *Union3[T1, T2, T3]) When(t1 func(t1 T1), t2 func(t2 T2), t3 func(t3 T3)) {
+	switch u.kind {
+	case 1:
+		t1(u.t1)
+	case 2:
+		t2(u.t2)
+	case 3:
+		t3(u.t3)
+	default:
+		panic("unreachable")
+	}
+}
+func (u *Union3[T1, T2, T3]) As1() (T1, bool) {
+	if u.kind == 1 {
+		return u.t1, true
+	}
+	return u.t1, false
+}
+func (u *Union3[T1, T2, T3]) As2() (T2, bool) {
+	if u.kind == 2 {
+		return u.t2, true
+	}
+	return u.t2, false
+}
+func (u *Union3[T1, T2, T3]) As3() (T3, bool) {
+	if u.kind == 3 {
+		return u.t3, true
+	}
+	return u.t3, false
+}
+func (u *Union3[T1, T2, T3]) MarshalJSON() ([]byte, error) {
+	switch u.kind {
+	case 1:
+		return json.Marshal(u.t1)
+	case 2:
+		return json.Marshal(u.t2)
+	case 3:
+		return json.Marshal(u.t3)
+	default:
+		panic("unreachable")
+	}
+}
+
+func (u *Union3[T1, T2, T3]) UnmarshalJSON(data []byte) error {
+	err1 := json.Unmarshal(data, &u.t1)
+	if err1 == nil {
+		u.kind = 1
+		return nil
+	}
+	err2 := json.Unmarshal(data, &u.t2)
+	if err2 == nil {
+		u.kind = 2
+		return nil
+	}
+	err3 := json.Unmarshal(data, &u.t3)
+	if err3 == nil {
+		u.kind = 3
+		return nil
+	}
+	return fmt.Errorf("failed to unmarshal Union3")
+}
+
+type Union3Builder[T1 any, T2 any, T3 any] interface {
+	From1(t1 T1) *Union3[T1, T2, T3]
+	From2(t2 T2) *Union3[T1, T2, T3]
+	From3(t3 T3) *Union3[T1, T2, T3]
+}
+type union3Builder[T1 any, T2 any, T3 any] struct{}
+
+func (b *union3Builder[T1, T2, T3]) From1(t1 T1) *Union3[T1, T2, T3] {
+	return &Union3[T1, T2, T3]{
+		kind: 1,
+		t1:   t1,
+	}
+}
+func (b *union3Builder[T1, T2, T3]) From2(t2 T2) *Union3[T1, T2, T3] {
+	return &Union3[T1, T2, T3]{
+		kind: 2,
+		t2:   t2,
+	}
+}
+func (b *union3Builder[T1, T2, T3]) From3(t3 T3) *Union3[T1, T2, T3] {
+	return &Union3[T1, T2, T3]{
+		kind: 3,
+		t3:   t3,
+	}
+}
+func NewUnion3[T1 any, T2 any, T3 any]() *union3Builder[T1, T2, T3] {
+	return &union3Builder[T1, T2, T3]{}
+}
+
+type Union4[T1 any, T2 any, T3 any, T4 any] struct {
+	kind uint8
+	t1   T1
+	t2   T2
+	t3   T3
+	t4   T4
+}
+
+func (u *Union4[T1, T2, T3, T4]) When(t1 func(t1 T1), t2 func(t2 T2), t3 func(t3 T3), t4 func(t4 T4)) {
+	switch u.kind {
+	case 1:
+		t1(u.t1)
+	case 2:
+		t2(u.t2)
+	case 3:
+		t3(u.t3)
+	case 4:
+		t4(u.t4)
+	default:
+		panic("unreachable")
+	}
+}
+func (u *Union4[T1, T2, T3, T4]) As1() (T1, bool) {
+	if u.kind == 1 {
+		return u.t1, true
+	}
+	return u.t1, false
+}
+func (u *Union4[T1, T2, T3, T4]) As2() (T2, bool) {
+	if u.kind == 2 {
+		return u.t2, true
+	}
+	return u.t2, false
+}
+func (u *Union4[T1, T2, T3, T4]) As3() (T3, bool) {
+	if u.kind == 3 {
+		return u.t3, true
+	}
+	return u.t3, false
+}
+func (u *Union4[T1, T2, T3, T4]) As4() (T4, bool) {
+	if u.kind == 4 {
+		return u.t4, true
+	}
+	return u.t4, false
+}
+func (u *Union4[T1, T2, T3, T4]) MarshalJSON() ([]byte, error) {
+	switch u.kind {
+	case 1:
+		return json.Marshal(u.t1)
+	case 2:
+		return json.Marshal(u.t2)
+	case 3:
+		return json.Marshal(u.t3)
+	case 4:
+		return json.Marshal(u.t4)
+	default:
+		panic("unreachable")
+	}
+}
+
+func (u *Union4[T1, T2, T3, T4]) UnmarshalJSON(data []byte) error {
+	err1 := json.Unmarshal(data, &u.t1)
+	if err1 == nil {
+		u.kind = 1
+		return nil
+	}
+	err2 := json.Unmarshal(data, &u.t2)
+	if err2 == nil {
+		u.kind = 2
+		return nil
+	}
+	err3 := json.Unmarshal(data, &u.t3)
+	if err3 == nil {
+		u.kind = 3
+		return nil
+	}
+	err4 := json.Unmarshal(data, &u.t4)
+	if err4 == nil {
+		u.kind = 4
+		return nil
+	}
+	return fmt.Errorf("failed to unmarshal Union4")
+}
+
+type Union4Builder[T1 any, T2 any, T3 any, T4 any] interface {
+	From1(t1 T1) *Union4[T1, T2, T3, T4]
+	From2(t2 T2) *Union4[T1, T2, T3, T4]
+	From3(t3 T3) *Union4[T1, T2, T3, T4]
+	From4(t4 T4) *Union4[T1, T2, T3, T4]
+}
+type union4Builder[T1 any, T2 any, T3 any, T4 any] struct{}
+
+func (b *union4Builder[T1, T2, T3, T4]) From1(t1 T1) *Union4[T1, T2, T3, T4] {
+	return &Union4[T1, T2, T3, T4]{
+		kind: 1,
+		t1:   t1,
+	}
+}
+func (b *union4Builder[T1, T2, T3, T4]) From2(t2 T2) *Union4[T1, T2, T3, T4] {
+	return &Union4[T1, T2, T3, T4]{
+		kind: 2,
+		t2:   t2,
+	}
+}
+func (b *union4Builder[T1, T2, T3, T4]) From3(t3 T3) *Union4[T1, T2, T3, T4] {
+	return &Union4[T1, T2, T3, T4]{
+		kind: 3,
+		t3:   t3,
+	}
+}
+func (b *union4Builder[T1, T2, T3, T4]) From4(t4 T4) *Union4[T1, T2, T3, T4] {
+	return &Union4[T1, T2, T3, T4]{
+		kind: 4,
+		t4:   t4,
+	}
+}
+func NewUnion4[T1 any, T2 any, T3 any, T4 any]() *union4Builder[T1, T2, T3, T4] {
+	return &union4Builder[T1, T2, T3, T4]{}
+}
+
+type Union5[T1 any, T2 any, T3 any, T4 any, T5 any] struct {
+	kind uint8
+	t1   T1
+	t2   T2
+	t3   T3
+	t4   T4
+	t5   T5
+}
+
+func (u *Union5[T1, T2, T3, T4, T5]) When(t1 func(t1 T1), t2 func(t2 T2), t3 func(t3 T3), t4 func(t4 T4), t5 func(t5 T5)) {
+	switch u.kind {
+	case 1:
+		t1(u.t1)
+	case 2:
+		t2(u.t2)
+	case 3:
+		t3(u.t3)
+	case 4:
+		t4(u.t4)
+	case 5:
+		t5(u.t5)
+	default:
+		panic("unreachable")
+	}
+}
+func (u *Union5[T1, T2, T3, T4, T5]) As1() (T1, bool) {
+	if u.kind == 1 {
+		return u.t1, true
+	}
+	return u.t1, false
+}
+func (u *Union5[T1, T2, T3, T4, T5]) As2() (T2, bool) {
+	if u.kind == 2 {
+		return u.t2, true
+	}
+	return u.t2, false
+}
+func (u *Union5[T1, T2, T3, T4, T5]) As3() (T3, bool) {
+	if u.kind == 3 {
+		return u.t3, true
+	}
+	return u.t3, false
+}
+func (u *Union5[T1, T2, T3, T4, T5]) As4() (T4, bool) {
+	if u.kind == 4 {
+		return u.t4, true
+	}
+	return u.t4, false
+}
+func (u *Union5[T1, T2, T3, T4, T5]) As5() (T5, bool) {
+	if u.kind == 5 {
+		return u.t5, true
+	}
+	return u.t5, false
+}
+func (u *Union5[T1, T2, T3, T4, T5]) MarshalJSON() ([]byte, error) {
+	switch u.kind {
+	case 1:
+		return json.Marshal(u.t1)
+	case 2:
+		return json.Marshal(u.t2)
+	case 3:
+		return json.Marshal(u.t3)
+	case 4:
+		return json.Marshal(u.t4)
+	case 5:
+		return json.Marshal(u.t5)
+	default:
+		panic("unreachable")
+	}
+}
+
+func (u *Union5[T1, T2, T3, T4, T5]) UnmarshalJSON(data []byte) error {
+	err1 := json.Unmarshal(data, &u.t1)
+	if err1 == nil {
+		u.kind = 1
+		return nil
+	}
+	err2 := json.Unmarshal(data, &u.t2)
+	if err2 == nil {
+		u.kind = 2
+		return nil
+	}
+	err3 := json.Unmarshal(data, &u.t3)
+	if err3 == nil {
+		u.kind = 3
+		return nil
+	}
+	err4 := json.Unmarshal(data, &u.t4)
+	if err4 == nil {
+		u.kind = 4
+		return nil
+	}
+	err5 := json.Unmarshal(data, &u.t5)
+	if err5 == nil {
+		u.kind = 5
+		return nil
+	}
+	return fmt.Errorf("failed to unmarshal Union5")
+}
+
+type Union5Builder[T1 any, T2 any, T3 any, T4 any, T5 any] interface {
+	From1(t1 T1) *Union5[T1, T2, T3, T4, T5]
+	From2(t2 T2) *Union5[T1, T2, T3, T4, T5]
+	From3(t3 T3) *Union5[T1, T2, T3, T4, T5]
+	From4(t4 T4) *Union5[T1, T2, T3, T4, T5]
+	From5(t5 T5) *Union5[T1, T2, T3, T4, T5]
+}
+type union5Builder[T1 any, T2 any, T3 any, T4 any, T5 any] struct{}
+
+func (b *union5Builder[T1, T2, T3, T4, T5]) From1(t1 T1) *Union5[T1, T2, T3, T4, T5] {
+	return &Union5[T1, T2, T3, T4, T5]{
+		kind: 1,
+		t1:   t1,
+	}
+}
+func (b *union5Builder[T1, T2, T3, T4, T5]) From2(t2 T2) *Union5[T1, T2, T3, T4, T5] {
+	return &Union5[T1, T2, T3, T4, T5]{
+		kind: 2,
+		t2:   t2,
+	}
+}
+func (b *union5Builder[T1, T2, T3, T4, T5]) From3(t3 T3) *Union5[T1, T2, T3, T4, T5] {
+	return &Union5[T1, T2, T3, T4, T5]{
+		kind: 3,
+		t3:   t3,
+	}
+}
+func (b *union5Builder[T1, T2, T3, T4, T5]) From4(t4 T4) *Union5[T1, T2, T3, T4, T5] {
+	return &Union5[T1, T2, T3, T4, T5]{
+		kind: 4,
+		t4:   t4,
+	}
+}
+func (b *union5Builder[T1, T2, T3, T4, T5]) From5(t5 T5) *Union5[T1, T2, T3, T4, T5] {
+	return &Union5[T1, T2, T3, T4, T5]{
+		kind: 5,
+		t5:   t5,
+	}
+}
+func NewUnion5[T1 any, T2 any, T3 any, T4 any, T5 any]() *union5Builder[T1, T2, T3, T4, T5] {
+	return &union5Builder[T1, T2, T3, T4, T5]{}
+}
+
+type Union6[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any] struct {
+	kind uint8
+	t1   T1
+	t2   T2
+	t3   T3
+	t4   T4
+	t5   T5
+	t6   T6
+}
+
+func (u *Union6[T1, T2, T3, T4, T5, T6]) When(t1 func(t1 T1), t2 func(t2 T2), t3 func(t3 T3), t4 func(t4 T4), t5 func(t5 T5), t6 func(t6 T6)) {
+	switch u.kind {
+	case 1:
+		t1(u.t1)
+	case 2:
+		t2(u.t2)
+	case 3:
+		t3(u.t3)
+	case 4:
+		t4(u.t4)
+	case 5:
+		t5(u.t5)
+	case 6:
+		t6(u.t6)
+	default:
+		panic("unreachable")
+	}
+}
+func (u *Union6[T1, T2, T3, T4, T5, T6]) As1() (T1, bool) {
+	if u.kind == 1 {
+		return u.t1, true
+	}
+	return u.t1, false
+}
+func (u *Union6[T1, T2, T3, T4, T5, T6]) As2() (T2, bool) {
+	if u.kind == 2 {
+		return u.t2, true
+	}
+	return u.t2, false
+}
+func (u *Union6[T1, T2, T3, T4, T5, T6]) As3() (T3, bool) {
+	if u.kind == 3 {
+		return u.t3, true
+	}
+	return u.t3, false
+}
+func (u *Union6[T1, T2, T3, T4, T5, T6]) As4() (T4, bool) {
+	if u.kind == 4 {
+		return u.t4, true
+	}
+	return u.t4, false
+}
+func (u *Union6[T1, T2, T3, T4, T5, T6]) As5() (T5, bool) {
+	if u.kind == 5 {
+		return u.t5, true
+	}
+	return u.t5, false
+}
+func (u *Union6[T1, T2, T3, T4, T5, T6]) As6() (T6, bool) {
+	if u.kind == 6 {
+		return u.t6, true
+	}
+	return u.t6, false
+}
+func (u *Union6[T1, T2, T3, T4, T5, T6]) MarshalJSON() ([]byte, error) {
+	switch u.kind {
+	case 1:
+		return json.Marshal(u.t1)
+	case 2:
+		return json.Marshal(u.t2)
+	case 3:
+		return json.Marshal(u.t3)
+	case 4:
+		return json.Marshal(u.t4)
+	case 5:
+		return json.Marshal(u.t5)
+	case 6:
+		return json.Marshal(u.t6)
+	default:
+		panic("unreachable")
+	}
+}
+
+func (u *Union6[T1, T2, T3, T4, T5, T6]) UnmarshalJSON(data []byte) error {
+	err1 := json.Unmarshal(data, &u.t1)
+	if err1 == nil {
+		u.kind = 1
+		return nil
+	}
+	err2 := json.Unmarshal(data, &u.t2)
+	if err2 == nil {
+		u.kind = 2
+		return nil
+	}
+	err3 := json.Unmarshal(data, &u.t3)
+	if err3 == nil {
+		u.kind = 3
+		return nil
+	}
+	err4 := json.Unmarshal(data, &u.t4)
+	if err4 == nil {
+		u.kind = 4
+		return nil
+	}
+	err5 := json.Unmarshal(data, &u.t5)
+	if err5 == nil {
+		u.kind = 5
+		return nil
+	}
+	err6 := json.Unmarshal(data, &u.t6)
+	if err6 == nil {
+		u.kind = 6
+		return nil
+	}
+	return fmt.Errorf("failed to unmarshal Union6")
+}
+
+type Union6Builder[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any] interface {
+	From1(t1 T1) *Union6[T1, T2, T3, T4, T5, T6]
+	From2(t2 T2) *Union6[T1, T2, T3, T4, T5, T6]
+	From3(t3 T3) *Union6[T1, T2, T3, T4, T5, T6]
+	From4(t4 T4) *Union6[T1, T2, T3, T4, T5, T6]
+	From5(t5 T5) *Union6[T1, T2, T3, T4, T5, T6]
+	From6(t6 T6) *Union6[T1, T2, T3, T4, T5, T6]
+}
+type union6Builder[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any] struct{}
+
+func (b *union6Builder[T1, T2, T3, T4, T5, T6]) From1(t1 T1) *Union6[T1, T2, T3, T4, T5, T6] {
+	return &Union6[T1, T2, T3, T4, T5, T6]{
+		kind: 1,
+		t1:   t1,
+	}
+}
+func (b *union6Builder[T1, T2, T3, T4, T5, T6]) From2(t2 T2) *Union6[T1, T2, T3, T4, T5, T6] {
+	return &Union6[T1, T2, T3, T4, T5, T6]{
+		kind: 2,
+		t2:   t2,
+	}
+}
+func (b *union6Builder[T1, T2, T3, T4, T5, T6]) From3(t3 T3) *Union6[T1, T2, T3, T4, T5, T6] {
+	return &Union6[T1, T2, T3, T4, T5, T6]{
+		kind: 3,
+		t3:   t3,
+	}
+}
+func (b *union6Builder[T1, T2, T3, T4, T5, T6]) From4(t4 T4) *Union6[T1, T2, T3, T4, T5, T6] {
+	return &Union6[T1, T2, T3, T4, T5, T6]{
+		kind: 4,
+		t4:   t4,
+	}
+}
+func (b *union6Builder[T1, T2, T3, T4, T5, T6]) From5(t5 T5) *Union6[T1, T2, T3, T4, T5, T6] {
+	return &Union6[T1, T2, T3, T4, T5, T6]{
+		kind: 5,
+		t5:   t5,
+	}
+}
+func (b *union6Builder[T1, T2, T3, T4, T5, T6]) From6(t6 T6) *Union6[T1, T2, T3, T4, T5, T6] {
+	return &Union6[T1, T2, T3, T4, T5, T6]{
+		kind: 6,
+		t6:   t6,
+	}
+}
+func NewUnion6[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any]() *union6Builder[T1, T2, T3, T4, T5, T6] {
+	return &union6Builder[T1, T2, T3, T4, T5, T6]{}
+}
+
+type Union7[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any, T7 any] struct {
+	kind uint8
+	t1   T1
+	t2   T2
+	t3   T3
+	t4   T4
+	t5   T5
+	t6   T6
+	t7   T7
+}
+
+func (u *Union7[T1, T2, T3, T4, T5, T6, T7]) When(t1 func(t1 T1), t2 func(t2 T2), t3 func(t3 T3), t4 func(t4 T4), t5 func(t5 T5), t6 func(t6 T6), t7 func(t7 T7)) {
+	switch u.kind {
+	case 1:
+		t1(u.t1)
+	case 2:
+		t2(u.t2)
+	case 3:
+		t3(u.t3)
+	case 4:
+		t4(u.t4)
+	case 5:
+		t5(u.t5)
+	case 6:
+		t6(u.t6)
+	case 7:
+		t7(u.t7)
+	default:
+		panic("unreachable")
+	}
+}
+func (u *Union7[T1, T2, T3, T4, T5, T6, T7]) As1() (T1, bool) {
+	if u.kind == 1 {
+		return u.t1, true
+	}
+	return u.t1, false
+}
+func (u *Union7[T1, T2, T3, T4, T5, T6, T7]) As2() (T2, bool) {
+	if u.kind == 2 {
+		return u.t2, true
+	}
+	return u.t2, false
+}
+func (u *Union7[T1, T2, T3, T4, T5, T6, T7]) As3() (T3, bool) {
+	if u.kind == 3 {
+		return u.t3, true
+	}
+	return u.t3, false
+}
+func (u *Union7[T1, T2, T3, T4, T5, T6, T7]) As4() (T4, bool) {
+	if u.kind == 4 {
+		return u.t4, true
+	}
+	return u.t4, false
+}
+func (u *Union7[T1, T2, T3, T4, T5, T6, T7]) As5() (T5, bool) {
+	if u.kind == 5 {
+		return u.t5, true
+	}
+	return u.t5, false
+}
+func (u *Union7[T1, T2, T3, T4, T5, T6, T7]) As6() (T6, bool) {
+	if u.kind == 6 {
+		return u.t6, true
+	}
+	return u.t6, false
+}
+func (u *Union7[T1, T2, T3, T4, T5, T6, T7]) As7() (T7, bool) {
+	if u.kind == 7 {
+		return u.t7, true
+	}
+	return u.t7, false
+}
+func (u *Union7[T1, T2, T3, T4, T5, T6, T7]) MarshalJSON() ([]byte, error) {
+	switch u.kind {
+	case 1:
+		return json.Marshal(u.t1)
+	case 2:
+		return json.Marshal(u.t2)
+	case 3:
+		return json.Marshal(u.t3)
+	case 4:
+		return json.Marshal(u.t4)
+	case 5:
+		return json.Marshal(u.t5)
+	case 6:
+		return json.Marshal(u.t6)
+	case 7:
+		return json.Marshal(u.t7)
+	default:
+		panic("unreachable")
+	}
+}
+
+func (u *Union7[T1, T2, T3, T4, T5, T6, T7]) UnmarshalJSON(data []byte) error {
+	err1 := json.Unmarshal(data, &u.t1)
+	if err1 == nil {
+		u.kind = 1
+		return nil
+	}
+	err2 := json.Unmarshal(data, &u.t2)
+	if err2 == nil {
+		u.kind = 2
+		return nil
+	}
+	err3 := json.Unmarshal(data, &u.t3)
+	if err3 == nil {
+		u.kind = 3
+		return nil
+	}
+	err4 := json.Unmarshal(data, &u.t4)
+	if err4 == nil {
+		u.kind = 4
+		return nil
+	}
+	err5 := json.Unmarshal(data, &u.t5)
+	if err5 == nil {
+		u.kind = 5
+		return nil
+	}
+	err6 := json.Unmarshal(data, &u.t6)
+	if err6 == nil {
+		u.kind = 6
+		return nil
+	}
+	err7 := json.Unmarshal(data, &u.t7)
+	if err7 == nil {
+		u.kind = 7
+		return nil
+	}
+	return fmt.Errorf("failed to unmarshal Union7")
+}
+
+type Union7Builder[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any, T7 any] interface {
+	From1(t1 T1) *Union7[T1, T2, T3, T4, T5, T6, T7]
+	From2(t2 T2) *Union7[T1, T2, T3, T4, T5, T6, T7]
+	From3(t3 T3) *Union7[T1, T2, T3, T4, T5, T6, T7]
+	From4(t4 T4) *Union7[T1, T2, T3, T4, T5, T6, T7]
+	From5(t5 T5) *Union7[T1, T2, T3, T4, T5, T6, T7]
+	From6(t6 T6) *Union7[T1, T2, T3, T4, T5, T6, T7]
+	From7(t7 T7) *Union7[T1, T2, T3, T4, T5, T6, T7]
+}
+type union7Builder[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any, T7 any] struct{}
+
+func (b *union7Builder[T1, T2, T3, T4, T5, T6, T7]) From1(t1 T1) *Union7[T1, T2, T3, T4, T5, T6, T7] {
+	return &Union7[T1, T2, T3, T4, T5, T6, T7]{
+		kind: 1,
+		t1:   t1,
+	}
+}
+func (b *union7Builder[T1, T2, T3, T4, T5, T6, T7]) From2(t2 T2) *Union7[T1, T2, T3, T4, T5, T6, T7] {
+	return &Union7[T1, T2, T3, T4, T5, T6, T7]{
+		kind: 2,
+		t2:   t2,
+	}
+}
+func (b *union7Builder[T1, T2, T3, T4, T5, T6, T7]) From3(t3 T3) *Union7[T1, T2, T3, T4, T5, T6, T7] {
+	return &Union7[T1, T2, T3, T4, T5, T6, T7]{
+		kind: 3,
+		t3:   t3,
+	}
+}
+func (b *union7Builder[T1, T2, T3, T4, T5, T6, T7]) From4(t4 T4) *Union7[T1, T2, T3, T4, T5, T6, T7] {
+	return &Union7[T1, T2, T3, T4, T5, T6, T7]{
+		kind: 4,
+		t4:   t4,
+	}
+}
+func (b *union7Builder[T1, T2, T3, T4, T5, T6, T7]) From5(t5 T5) *Union7[T1, T2, T3, T4, T5, T6, T7] {
+	return &Union7[T1, T2, T3, T4, T5, T6, T7]{
+		kind: 5,
+		t5:   t5,
+	}
+}
+func (b *union7Builder[T1, T2, T3, T4, T5, T6, T7]) From6(t6 T6) *Union7[T1, T2, T3, T4, T5, T6, T7] {
+	return &Union7[T1, T2, T3, T4, T5, T6, T7]{
+		kind: 6,
+		t6:   t6,
+	}
+}
+func (b *union7Builder[T1, T2, T3, T4, T5, T6, T7]) From7(t7 T7) *Union7[T1, T2, T3, T4, T5, T6, T7] {
+	return &Union7[T1, T2, T3, T4, T5, T6, T7]{
+		kind: 7,
+		t7:   t7,
+	}
+}
+func NewUnion7[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any, T7 any]() *union7Builder[T1, T2, T3, T4, T5, T6, T7] {
+	return &union7Builder[T1, T2, T3, T4, T5, T6, T7]{}
+}
+
+type Union8[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any, T7 any, T8 any] struct {
+	kind uint8
+	t1   T1
+	t2   T2
+	t3   T3
+	t4   T4
+	t5   T5
+	t6   T6
+	t7   T7
+	t8   T8
+}
+
+func (u *Union8[T1, T2, T3, T4, T5, T6, T7, T8]) When(t1 func(t1 T1), t2 func(t2 T2), t3 func(t3 T3), t4 func(t4 T4), t5 func(t5 T5), t6 func(t6 T6), t7 func(t7 T7), t8 func(t8 T8)) {
+	switch u.kind {
+	case 1:
+		t1(u.t1)
+	case 2:
+		t2(u.t2)
+	case 3:
+		t3(u.t3)
+	case 4:
+		t4(u.t4)
+	case 5:
+		t5(u.t5)
+	case 6:
+		t6(u.t6)
+	case 7:
+		t7(u.t7)
+	case 8:
+		t8(u.t8)
+	default:
+		panic("unreachable")
+	}
+}
+func (u *Union8[T1, T2, T3, T4, T5, T6, T7, T8]) As1() (T1, bool) {
+	if u.kind == 1 {
+		return u.t1, true
+	}
+	return u.t1, false
+}
+func (u *Union8[T1, T2, T3, T4, T5, T6, T7, T8]) As2() (T2, bool) {
+	if u.kind == 2 {
+		return u.t2, true
+	}
+	return u.t2, false
+}
+func (u *Union8[T1, T2, T3, T4, T5, T6, T7, T8]) As3() (T3, bool) {
+	if u.kind == 3 {
+		return u.t3, true
+	}
+	return u.t3, false
+}
+func (u *Union8[T1, T2, T3, T4, T5, T6, T7, T8]) As4() (T4, bool) {
+	if u.kind == 4 {
+		return u.t4, true
+	}
+	return u.t4, false
+}
+func (u *Union8[T1, T2, T3, T4, T5, T6, T7, T8]) As5() (T5, bool) {
+	if u.kind == 5 {
+		return u.t5, true
+	}
+	return u.t5, false
+}
+func (u *Union8[T1, T2, T3, T4, T5, T6, T7, T8]) As6() (T6, bool) {
+	if u.kind == 6 {
+		return u.t6, true
+	}
+	return u.t6, false
+}
+func (u *Union8[T1, T2, T3, T4, T5, T6, T7, T8]) As7() (T7, bool) {
+	if u.kind == 7 {
+		return u.t7, true
+	}
+	return u.t7, false
+}
+func (u *Union8[T1, T2, T3, T4, T5, T6, T7, T8]) As8() (T8, bool) {
+	if u.kind == 8 {
+		return u.t8, true
+	}
+	return u.t8, false
+}
+func (u *Union8[T1, T2, T3, T4, T5, T6, T7, T8]) MarshalJSON() ([]byte, error) {
+	switch u.kind {
+	case 1:
+		return json.Marshal(u.t1)
+	case 2:
+		return json.Marshal(u.t2)
+	case 3:
+		return json.Marshal(u.t3)
+	case 4:
+		return json.Marshal(u.t4)
+	case 5:
+		return json.Marshal(u.t5)
+	case 6:
+		return json.Marshal(u.t6)
+	case 7:
+		return json.Marshal(u.t7)
+	case 8:
+		return json.Marshal(u.t8)
+	default:
+		panic("unreachable")
+	}
+}
+
+func (u *Union8[T1, T2, T3, T4, T5, T6, T7, T8]) UnmarshalJSON(data []byte) error {
+	err1 := json.Unmarshal(data, &u.t1)
+	if err1 == nil {
+		u.kind = 1
+		return nil
+	}
+	err2 := json.Unmarshal(data, &u.t2)
+	if err2 == nil {
+		u.kind = 2
+		return nil
+	}
+	err3 := json.Unmarshal(data, &u.t3)
+	if err3 == nil {
+		u.kind = 3
+		return nil
+	}
+	err4 := json.Unmarshal(data, &u.t4)
+	if err4 == nil {
+		u.kind = 4
+		return nil
+	}
+	err5 := json.Unmarshal(data, &u.t5)
+	if err5 == nil {
+		u.kind = 5
+		return nil
+	}
+	err6 := json.Unmarshal(data, &u.t6)
+	if err6 == nil {
+		u.kind = 6
+		return nil
+	}
+	err7 := json.Unmarshal(data, &u.t7)
+	if err7 == nil {
+		u.kind = 7
+		return nil
+	}
+	err8 := json.Unmarshal(data, &u.t8)
+	if err8 == nil {
+		u.kind = 8
+		return nil
+	}
+	return fmt.Errorf("failed to unmarshal Union8")
+}
+
+type Union8Builder[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any, T7 any, T8 any] interface {
+	From1(t1 T1) *Union8[T1, T2, T3, T4, T5, T6, T7, T8]
+	From2(t2 T2) *Union8[T1, T2, T3, T4, T5, T6, T7, T8]
+	From3(t3 T3) *Union8[T1, T2, T3, T4, T5, T6, T7, T8]
+	From4(t4 T4) *Union8[T1, T2, T3, T4, T5, T6, T7, T8]
+	From5(t5 T5) *Union8[T1, T2, T3, T4, T5, T6, T7, T8]
+	From6(t6 T6) *Union8[T1, T2, T3, T4, T5, T6, T7, T8]
+	From7(t7 T7) *Union8[T1, T2, T3, T4, T5, T6, T7, T8]
+	From8(t8 T8) *Union8[T1, T2, T3, T4, T5, T6, T7, T8]
+}
+type union8Builder[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any, T7 any, T8 any] struct{}
+
+func (b *union8Builder[T1, T2, T3, T4, T5, T6, T7, T8]) From1(t1 T1) *Union8[T1, T2, T3, T4, T5, T6, T7, T8] {
+	return &Union8[T1, T2, T3, T4, T5, T6, T7, T8]{
+		kind: 1,
+		t1:   t1,
+	}
+}
+func (b *union8Builder[T1, T2, T3, T4, T5, T6, T7, T8]) From2(t2 T2) *Union8[T1, T2, T3, T4, T5, T6, T7, T8] {
+	return &Union8[T1, T2, T3, T4, T5, T6, T7, T8]{
+		kind: 2,
+		t2:   t2,
+	}
+}
+func (b *union8Builder[T1, T2, T3, T4, T5, T6, T7, T8]) From3(t3 T3) *Union8[T1, T2, T3, T4, T5, T6, T7, T8] {
+	return &Union8[T1, T2, T3, T4, T5, T6, T7, T8]{
+		kind: 3,
+		t3:   t3,
+	}
+}
+func (b *union8Builder[T1, T2, T3, T4, T5, T6, T7, T8]) From4(t4 T4) *Union8[T1, T2, T3, T4, T5, T6, T7, T8] {
+	return &Union8[T1, T2, T3, T4, T5, T6, T7, T8]{
+		kind: 4,
+		t4:   t4,
+	}
+}
+func (b *union8Builder[T1, T2, T3, T4, T5, T6, T7, T8]) From5(t5 T5) *Union8[T1, T2, T3, T4, T5, T6, T7, T8] {
+	return &Union8[T1, T2, T3, T4, T5, T6, T7, T8]{
+		kind: 5,
+		t5:   t5,
+	}
+}
+func (b *union8Builder[T1, T2, T3, T4, T5, T6, T7, T8]) From6(t6 T6) *Union8[T1, T2, T3, T4, T5, T6, T7, T8] {
+	return &Union8[T1, T2, T3, T4, T5, T6, T7, T8]{
+		kind: 6,
+		t6:   t6,
+	}
+}
+func (b *union8Builder[T1, T2, T3, T4, T5, T6, T7, T8]) From7(t7 T7) *Union8[T1, T2, T3, T4, T5, T6, T7, T8] {
+	return &Union8[T1, T2, T3, T4, T5, T6, T7, T8]{
+		kind: 7,
+		t7:   t7,
+	}
+}
+func (b *union8Builder[T1, T2, T3, T4, T5, T6, T7, T8]) From8(t8 T8) *Union8[T1, T2, T3, T4, T5, T6, T7, T8] {
+	return &Union8[T1, T2, T3, T4, T5, T6, T7, T8]{
+		kind: 8,
+		t8:   t8,
+	}
+}
+func NewUnion8[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any, T7 any, T8 any]() *union8Builder[T1, T2, T3, T4, T5, T6, T7, T8] {
+	return &union8Builder[T1, T2, T3, T4, T5, T6, T7, T8]{}
+}
+
+type Union9[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any, T7 any, T8 any, T9 any] struct {
+	kind uint8
+	t1   T1
+	t2   T2
+	t3   T3
+	t4   T4
+	t5   T5
+	t6   T6
+	t7   T7
+	t8   T8
+	t9   T9
+}
+
+func (u *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]) When(t1 func(t1 T1), t2 func(t2 T2), t3 func(t3 T3), t4 func(t4 T4), t5 func(t5 T5), t6 func(t6 T6), t7 func(t7 T7), t8 func(t8 T8), t9 func(t9 T9)) {
+	switch u.kind {
+	case 1:
+		t1(u.t1)
+	case 2:
+		t2(u.t2)
+	case 3:
+		t3(u.t3)
+	case 4:
+		t4(u.t4)
+	case 5:
+		t5(u.t5)
+	case 6:
+		t6(u.t6)
+	case 7:
+		t7(u.t7)
+	case 8:
+		t8(u.t8)
+	case 9:
+		t9(u.t9)
+	default:
+		panic("unreachable")
+	}
+}
+func (u *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]) As1() (T1, bool) {
+	if u.kind == 1 {
+		return u.t1, true
+	}
+	return u.t1, false
+}
+func (u *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]) As2() (T2, bool) {
+	if u.kind == 2 {
+		return u.t2, true
+	}
+	return u.t2, false
+}
+func (u *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]) As3() (T3, bool) {
+	if u.kind == 3 {
+		return u.t3, true
+	}
+	return u.t3, false
+}
+func (u *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]) As4() (T4, bool) {
+	if u.kind == 4 {
+		return u.t4, true
+	}
+	return u.t4, false
+}
+func (u *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]) As5() (T5, bool) {
+	if u.kind == 5 {
+		return u.t5, true
+	}
+	return u.t5, false
+}
+func (u *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]) As6() (T6, bool) {
+	if u.kind == 6 {
+		return u.t6, true
+	}
+	return u.t6, false
+}
+func (u *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]) As7() (T7, bool) {
+	if u.kind == 7 {
+		return u.t7, true
+	}
+	return u.t7, false
+}
+func (u *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]) As8() (T8, bool) {
+	if u.kind == 8 {
+		return u.t8, true
+	}
+	return u.t8, false
+}
+func (u *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]) As9() (T9, bool) {
+	if u.kind == 9 {
+		return u.t9, true
+	}
+	return u.t9, false
+}
+func (u *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]) MarshalJSON() ([]byte, error) {
+	switch u.kind {
+	case 1:
+		return json.Marshal(u.t1)
+	case 2:
+		return json.Marshal(u.t2)
+	case 3:
+		return json.Marshal(u.t3)
+	case 4:
+		return json.Marshal(u.t4)
+	case 5:
+		return json.Marshal(u.t5)
+	case 6:
+		return json.Marshal(u.t6)
+	case 7:
+		return json.Marshal(u.t7)
+	case 8:
+		return json.Marshal(u.t8)
+	case 9:
+		return json.Marshal(u.t9)
+	default:
+		panic("unreachable")
+	}
+}
+
+func (u *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]) UnmarshalJSON(data []byte) error {
+	err1 := json.Unmarshal(data, &u.t1)
+	if err1 == nil {
+		u.kind = 1
+		return nil
+	}
+	err2 := json.Unmarshal(data, &u.t2)
+	if err2 == nil {
+		u.kind = 2
+		return nil
+	}
+	err3 := json.Unmarshal(data, &u.t3)
+	if err3 == nil {
+		u.kind = 3
+		return nil
+	}
+	err4 := json.Unmarshal(data, &u.t4)
+	if err4 == nil {
+		u.kind = 4
+		return nil
+	}
+	err5 := json.Unmarshal(data, &u.t5)
+	if err5 == nil {
+		u.kind = 5
+		return nil
+	}
+	err6 := json.Unmarshal(data, &u.t6)
+	if err6 == nil {
+		u.kind = 6
+		return nil
+	}
+	err7 := json.Unmarshal(data, &u.t7)
+	if err7 == nil {
+		u.kind = 7
+		return nil
+	}
+	err8 := json.Unmarshal(data, &u.t8)
+	if err8 == nil {
+		u.kind = 8
+		return nil
+	}
+	err9 := json.Unmarshal(data, &u.t9)
+	if err9 == nil {
+		u.kind = 9
+		return nil
+	}
+	return fmt.Errorf("failed to unmarshal Union9")
+}
+
+type Union9Builder[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any, T7 any, T8 any, T9 any] interface {
+	From1(t1 T1) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]
+	From2(t2 T2) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]
+	From3(t3 T3) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]
+	From4(t4 T4) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]
+	From5(t5 T5) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]
+	From6(t6 T6) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]
+	From7(t7 T7) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]
+	From8(t8 T8) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]
+	From9(t9 T9) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]
+}
+type union9Builder[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any, T7 any, T8 any, T9 any] struct{}
+
+func (b *union9Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9]) From1(t1 T1) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9] {
+	return &Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]{
+		kind: 1,
+		t1:   t1,
+	}
+}
+func (b *union9Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9]) From2(t2 T2) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9] {
+	return &Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]{
+		kind: 2,
+		t2:   t2,
+	}
+}
+func (b *union9Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9]) From3(t3 T3) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9] {
+	return &Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]{
+		kind: 3,
+		t3:   t3,
+	}
+}
+func (b *union9Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9]) From4(t4 T4) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9] {
+	return &Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]{
+		kind: 4,
+		t4:   t4,
+	}
+}
+func (b *union9Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9]) From5(t5 T5) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9] {
+	return &Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]{
+		kind: 5,
+		t5:   t5,
+	}
+}
+func (b *union9Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9]) From6(t6 T6) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9] {
+	return &Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]{
+		kind: 6,
+		t6:   t6,
+	}
+}
+func (b *union9Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9]) From7(t7 T7) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9] {
+	return &Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]{
+		kind: 7,
+		t7:   t7,
+	}
+}
+func (b *union9Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9]) From8(t8 T8) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9] {
+	return &Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]{
+		kind: 8,
+		t8:   t8,
+	}
+}
+func (b *union9Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9]) From9(t9 T9) *Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9] {
+	return &Union9[T1, T2, T3, T4, T5, T6, T7, T8, T9]{
+		kind: 9,
+		t9:   t9,
+	}
+}
+func NewUnion9[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any, T7 any, T8 any, T9 any]() *union9Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9] {
+	return &union9Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9]{}
+}
+
+type Union10[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any, T7 any, T8 any, T9 any, T10 any] struct {
+	kind uint8
+	t1   T1
+	t2   T2
+	t3   T3
+	t4   T4
+	t5   T5
+	t6   T6
+	t7   T7
+	t8   T8
+	t9   T9
+	t10  T10
+}
+
+func (u *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) When(t1 func(t1 T1), t2 func(t2 T2), t3 func(t3 T3), t4 func(t4 T4), t5 func(t5 T5), t6 func(t6 T6), t7 func(t7 T7), t8 func(t8 T8), t9 func(t9 T9), t10 func(t10 T10)) {
+	switch u.kind {
+	case 1:
+		t1(u.t1)
+	case 2:
+		t2(u.t2)
+	case 3:
+		t3(u.t3)
+	case 4:
+		t4(u.t4)
+	case 5:
+		t5(u.t5)
+	case 6:
+		t6(u.t6)
+	case 7:
+		t7(u.t7)
+	case 8:
+		t8(u.t8)
+	case 9:
+		t9(u.t9)
+	case 10:
+		t10(u.t10)
+	default:
+		panic("unreachable")
+	}
+}
+func (u *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) As1() (T1, bool) {
+	if u.kind == 1 {
+		return u.t1, true
+	}
+	return u.t1, false
+}
+func (u *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) As2() (T2, bool) {
+	if u.kind == 2 {
+		return u.t2, true
+	}
+	return u.t2, false
+}
+func (u *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) As3() (T3, bool) {
+	if u.kind == 3 {
+		return u.t3, true
+	}
+	return u.t3, false
+}
+func (u *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) As4() (T4, bool) {
+	if u.kind == 4 {
+		return u.t4, true
+	}
+	return u.t4, false
+}
+func (u *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) As5() (T5, bool) {
+	if u.kind == 5 {
+		return u.t5, true
+	}
+	return u.t5, false
+}
+func (u *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) As6() (T6, bool) {
+	if u.kind == 6 {
+		return u.t6, true
+	}
+	return u.t6, false
+}
+func (u *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) As7() (T7, bool) {
+	if u.kind == 7 {
+		return u.t7, true
+	}
+	return u.t7, false
+}
+func (u *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) As8() (T8, bool) {
+	if u.kind == 8 {
+		return u.t8, true
+	}
+	return u.t8, false
+}
+func (u *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) As9() (T9, bool) {
+	if u.kind == 9 {
+		return u.t9, true
+	}
+	return u.t9, false
+}
+func (u *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) As10() (T10, bool) {
+	if u.kind == 10 {
+		return u.t10, true
+	}
+	return u.t10, false
+}
+func (u *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) MarshalJSON() ([]byte, error) {
+	switch u.kind {
+	case 1:
+		return json.Marshal(u.t1)
+	case 2:
+		return json.Marshal(u.t2)
+	case 3:
+		return json.Marshal(u.t3)
+	case 4:
+		return json.Marshal(u.t4)
+	case 5:
+		return json.Marshal(u.t5)
+	case 6:
+		return json.Marshal(u.t6)
+	case 7:
+		return json.Marshal(u.t7)
+	case 8:
+		return json.Marshal(u.t8)
+	case 9:
+		return json.Marshal(u.t9)
+	case 10:
+		return json.Marshal(u.t10)
+	default:
+		panic("unreachable")
+	}
+}
+
+func (u *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) UnmarshalJSON(data []byte) error {
+	err1 := json.Unmarshal(data, &u.t1)
+	if err1 == nil {
+		u.kind = 1
+		return nil
+	}
+	err2 := json.Unmarshal(data, &u.t2)
+	if err2 == nil {
+		u.kind = 2
+		return nil
+	}
+	err3 := json.Unmarshal(data, &u.t3)
+	if err3 == nil {
+		u.kind = 3
+		return nil
+	}
+	err4 := json.Unmarshal(data, &u.t4)
+	if err4 == nil {
+		u.kind = 4
+		return nil
+	}
+	err5 := json.Unmarshal(data, &u.t5)
+	if err5 == nil {
+		u.kind = 5
+		return nil
+	}
+	err6 := json.Unmarshal(data, &u.t6)
+	if err6 == nil {
+		u.kind = 6
+		return nil
+	}
+	err7 := json.Unmarshal(data, &u.t7)
+	if err7 == nil {
+		u.kind = 7
+		return nil
+	}
+	err8 := json.Unmarshal(data, &u.t8)
+	if err8 == nil {
+		u.kind = 8
+		return nil
+	}
+	err9 := json.Unmarshal(data, &u.t9)
+	if err9 == nil {
+		u.kind = 9
+		return nil
+	}
+	err10 := json.Unmarshal(data, &u.t10)
+	if err10 == nil {
+		u.kind = 10
+		return nil
+	}
+	return fmt.Errorf("failed to unmarshal Union10")
+}
+
+type Union10Builder[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any, T7 any, T8 any, T9 any, T10 any] interface {
+	From1(t1 T1) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]
+	From2(t2 T2) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]
+	From3(t3 T3) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]
+	From4(t4 T4) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]
+	From5(t5 T5) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]
+	From6(t6 T6) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]
+	From7(t7 T7) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]
+	From8(t8 T8) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]
+	From9(t9 T9) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]
+	From10(t10 T10) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]
+}
+type union10Builder[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any, T7 any, T8 any, T9 any, T10 any] struct{}
+
+func (b *union10Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) From1(t1 T1) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10] {
+	return &Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]{
+		kind: 1,
+		t1:   t1,
+	}
+}
+func (b *union10Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) From2(t2 T2) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10] {
+	return &Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]{
+		kind: 2,
+		t2:   t2,
+	}
+}
+func (b *union10Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) From3(t3 T3) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10] {
+	return &Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]{
+		kind: 3,
+		t3:   t3,
+	}
+}
+func (b *union10Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) From4(t4 T4) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10] {
+	return &Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]{
+		kind: 4,
+		t4:   t4,
+	}
+}
+func (b *union10Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) From5(t5 T5) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10] {
+	return &Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]{
+		kind: 5,
+		t5:   t5,
+	}
+}
+func (b *union10Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) From6(t6 T6) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10] {
+	return &Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]{
+		kind: 6,
+		t6:   t6,
+	}
+}
+func (b *union10Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) From7(t7 T7) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10] {
+	return &Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]{
+		kind: 7,
+		t7:   t7,
+	}
+}
+func (b *union10Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) From8(t8 T8) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10] {
+	return &Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]{
+		kind: 8,
+		t8:   t8,
+	}
+}
+func (b *union10Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) From9(t9 T9) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10] {
+	return &Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]{
+		kind: 9,
+		t9:   t9,
+	}
+}
+func (b *union10Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) From10(t10 T10) *Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10] {
+	return &Union10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]{
+		kind: 10,
+		t10:  t10,
+	}
+}
+func NewUnion10[T1 any, T2 any, T3 any, T4 any, T5 any, T6 any, T7 any, T8 any, T9 any, T10 any]() *union10Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10] {
+	return &union10Builder[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]{}
+}

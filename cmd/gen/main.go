@@ -1,0 +1,44 @@
+package main
+
+import (
+	"github.com/akishichinibu/goadt/internal/gen/union"
+	j "github.com/dave/jennifer/jen"
+)
+
+const packageName = "goadt"
+const maxOrder = 10
+
+func genUnion() error {
+	f := j.NewFile(packageName)
+
+	for i := 2; i <= maxOrder; i++ {
+		g := union.NewUnionGenerator(i)
+		if err := g.Gen(f); err != nil {
+			return err
+		}
+	}
+
+	return f.Save("union.gen.go")
+}
+
+// func genTuple() error {
+// 	f := j.NewFile("godantic")
+
+// 	for i := 2; i <= 10; i++ {
+// 		g := gen.NewTupleGenerator(i)
+// 		if err := g.Gen(f); err != nil {
+// 			return err
+// 		}
+// 	}
+
+// 	return f.Save("g_tuple.go")
+// }
+
+func main() {
+	if err := genUnion(); err != nil {
+		panic(err)
+	}
+	// if err := genTuple(); err != nil {
+	// 	panic(err)
+	// }
+}
