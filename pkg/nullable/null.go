@@ -1,4 +1,4 @@
-package goadt
+package nullable
 
 type null struct{}
 

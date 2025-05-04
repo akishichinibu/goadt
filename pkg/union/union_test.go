@@ -1,15 +1,15 @@
-package goadt_test
+package union_test
 
 import (
 	"encoding/json"
 	"testing"
 
-	"github.com/akishichinibu/goadt"
+	"github.com/akishichinibu/goadt/pkg/union"
 	"github.com/stretchr/testify/require"
 )
 
 func TestUnionSimpleType(t *testing.T) {
-	value := goadt.NewUnion2[int, string]().From1(42)
+	value := union.NewUnion2[int, string]().From1(42)
 
 	v, ok := value.As1()
 	require.True(t, ok)
@@ -28,7 +28,7 @@ func TestUnionStructOrInterface(t *testing.T) {
 		Name string
 	}
 
-	value := goadt.NewUnion2[MyStruct, string]().From1(MyStruct{Name: "Test"})
+	value := union.NewUnion2[MyStruct, string]().From1(MyStruct{Name: "Test"})
 
 	if v, ok := value.As1(); !ok || v.Name != "Test" {
 		t.Errorf("Expected value to be MyStruct with Name 'Test', got %v", v)
@@ -44,7 +44,7 @@ func TestUnionStructOrInterface(t *testing.T) {
 }
 
 func TestUnion(t *testing.T) {
-	value := goadt.NewUnion2[int, string]().From1(42)
+	value := union.NewUnion2[int, string]().From1(42)
 
 	if _, ok := value.As1(); !ok {
 		t.Errorf("Expected value to be of type int")
