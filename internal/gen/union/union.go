@@ -6,7 +6,7 @@ import (
 	j "github.com/dave/jennifer/jen"
 )
 
-const runtimePkg = "github.com/akishichinibu/goadt/pkg/runtime"
+const runtimePkg = "github.com/akishichinibu/goadt/pkg/union"
 
 type UnionGenerator struct {
 	order  int
@@ -97,7 +97,7 @@ func (g *UnionGenerator) genJSONMethods(f *j.File) {
 			b.Switch(j.Id("u").Dot(g.naming.kindMember)).BlockFunc(func(s *j.Group) {
 				for i := 1; i <= g.order; i++ {
 					s.Case(j.Lit(i)).Block(
-						j.Return(j.Qual(runtimePkg, "MarshalJSON").Call(j.Id("u").Dot(g.naming.value(i)))),
+						j.Return(j.Id("MarshalJSON").Call(j.Id("u").Dot(g.naming.value(i)))),
 					)
 				}
 				s.Default().Block(
@@ -116,7 +116,7 @@ func (g *UnionGenerator) genJSONMethods(f *j.File) {
 		Params(j.Id("data").Index().Byte()).Error().
 		BlockFunc(func(b *j.Group) {
 			for i := 1; i <= g.order; i++ {
-				b.List(j.Id(g.naming.errName(i))).Op(":=").Qual(runtimePkg, "UnmarshalJSON").Call(
+				b.List(j.Id(g.naming.errName(i))).Op(":=").Id("UnmarshalJSON").Call(
 					j.Id("data"), j.Op("&").Id("u").Dot(g.naming.value(i)),
 				)
 				b.If(j.Id(g.naming.errName(i)).Op("==").Nil()).Block(
