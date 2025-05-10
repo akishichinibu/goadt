@@ -1,11 +1,5 @@
 package nullable
 
-import (
-	"encoding/json"
-
-	"github.com/akishichinibu/goadt/pkg/union"
-)
-
 const jsonNull = "null"
 
 func (n Nullable[T]) MarshalJSON() ([]byte, error) {
@@ -13,22 +7,21 @@ func (n Nullable[T]) MarshalJSON() ([]byte, error) {
 	if !ok {
 		return []byte(jsonNull), nil
 	}
-	return json.Marshal(v)
+	return marshalJSON(v)
 }
 
 func (n *Nullable[T]) UnmarshalJSON(data []byte) error {
-	u := union.NewUnion2[T, null]()
-
 	if string(data) == jsonNull {
-		n.u = u.From2(Null)
+		n.ok = false
 		return nil
 	}
 
 	var v T
-	if err := json.Unmarshal(data, &v); err != nil {
+	if err := unmarshalJSON(data, &v); err != nil {
 		return err
 	}
 
-	n.u = u.From1(v)
+	n.ok = true
+	n.value = v
 	return nil
 }

@@ -1,33 +1,29 @@
 package nullable
 
-import "github.com/akishichinibu/goadt/pkg/union"
-
 type Nullable[T any] struct {
-	u *union.Union2[T, null]
+	ok    bool
+	value T
 }
 
 func (n Nullable[T]) Get() (T, bool) {
-	return n.u.As1()
+	if n.IsPresent() {
+		return n.value, true
+	}
+	return n.value, false
 }
 
 func (n Nullable[T]) IsPresent() bool {
-	_, ok := n.u.As1()
-	return ok
+	return n.ok
 }
 
 func (n Nullable[T]) IsNull() bool {
-	_, ok := n.u.As2()
-	return ok
+	return !n.ok
 }
 
 func NewNull[T any]() Nullable[T] {
-	u := union.NewUnion2[T, null]()
-	v := u.From2(Null)
-	return Nullable[T]{u: v}
+	return Nullable[T]{ok: false}
 }
 
 func NewWithValue[T any](value T) Nullable[T] {
-	u := union.NewUnion2[T, null]()
-	v := u.From1(value)
-	return Nullable[T]{u: v}
+	return Nullable[T]{ok: true, value: value}
 }

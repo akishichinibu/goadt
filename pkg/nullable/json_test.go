@@ -8,48 +8,55 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type testCase1[T any] struct {
-	name     string
-	input    nullable.Nullable[T]
-	expected string
+func ptr[T any](v T) *T {
+	return &v
 }
 
-func (t testCase1[T]) ExceptedNull() bool {
-	return t.expected == `null`
+type jsonTestCase[T any] struct {
+	name        string
+	input       nullable.Nullable[T]
+	exceptValue *T
+	exceptJSON  string
 }
 
-func TestSingleValue(t *testing.T) {
+func (t jsonTestCase[T]) exceptNull() bool {
+	return t.exceptJSON == `null`
+}
 
+func (tc jsonTestCase[T]) run(t *testing.T) {
+	data, err := json.Marshal(tc.input)
+	require.NoError(t, err, tc.name)
+	require.Equal(t, tc.exceptJSON, string(data), tc.name)
+
+	var parsed nullable.Nullable[string]
+	err = json.Unmarshal(data, &parsed)
+	require.NoError(t, err, tc.name)
+
+	v, ok := parsed.Get()
+	switch tc.exceptNull() {
+	case true:
+		require.False(t, ok, tc.name)
+	case false:
+		require.True(t, ok, tc.name)
+		require.Equal(t, *tc.exceptValue, v, tc.name)
+	}
+}
+
+func TestSimpleType(t *testing.T) {
 	val1 := nullable.NewWithValue("hello")
 	val2 := nullable.NewNull[string]()
 
-	cases := []testCase1[string]{
-		{"non-null string", val1, `"hello"`},
-		{"null string", val2, `null`},
+	cases := []jsonTestCase[string]{
+		{"non-null string", val1, ptr("hello"), `"hello"`},
+		{"null string", val2, nil, `null`},
 	}
 
-	for _, c := range cases {
-		data, err := json.Marshal(c.input)
-		require.NoError(t, err, c.name)
-		require.JSONEq(t, c.expected, string(data), c.name)
-
-		var parsed nullable.Nullable[string]
-		err = json.Unmarshal(data, &parsed)
-		require.NoError(t, err, c.name)
-
-		v, ok := parsed.Get()
-		switch c.ExceptedNull() {
-		case true:
-			require.False(t, ok, c.name)
-			require.Equal(t, "", v, c.name)
-		case false:
-			require.True(t, ok, c.name)
-			require.Equal(t, "hello", v, c.name)
-		}
+	for _, tc := range cases {
+		tc.run(t)
 	}
 }
 
-func TestNullableAsField(t *testing.T) {
+func TestSimpleTypeInStruct(t *testing.T) {
 	type Obj struct {
 		Key nullable.Nullable[string] `json:"key"`
 	}
@@ -75,4 +82,23 @@ func TestNullableAsField(t *testing.T) {
 
 	_, ok2 := parsed2.Key.Get()
 	require.False(t, ok2)
+}
+
+func TestStruct(t *testing.T) {
+	type Obj struct {
+		A int
+		B string
+	}
+
+	val1 := nullable.NewWithValue(Obj{A: 1, B: "test"})
+	val2 := nullable.NewNull[Obj]()
+
+	cases := []jsonTestCase[Obj]{
+		{"non-null struct", val1, ptr(Obj{A: 1, B: "test"}), `{"A":1,"B":"test"}`},
+		{"null struct", val2, nil, `null`},
+	}
+
+	for _, tc := range cases {
+		tc.run(t)
+	}
 }
